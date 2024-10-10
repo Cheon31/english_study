@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {  // 영어단어장으로 이동 화면
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영어단어 외우기1234'),
+        title: const Text('영어단어 외우기1234234727183472018934701'),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
