@@ -1,37 +1,46 @@
-import 'package:androidstduid/databaseConfig.dart';
+// list.dart
+
 import 'package:flutter/material.dart';
-import 'remember.dart';
+import 'databaseConfig.dart';
 import 'word.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
-
-
-class HomePage extends StatefulWidget {  // 데이터베이스 화면으로 이동하는 부분
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-
 class _HomePageState extends State<HomePage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _meaningController = TextEditingController();
+  final TextEditingController _chapterController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService();
-  Future<List<Word>> _wordList = DatabaseService()
-      .databaseConfig()
-      .then((_) => DatabaseService().selectWords());
-  int currentCount = 0;
+  late Future<List<Word>> _wordList;
 
   @override
-  Widget build(BuildContext context) {  // 영어단어장으로 이동 화면
+  void initState() {
+    super.initState();
+    _loadWordList();
+  }
+
+  void _loadWordList() {
+    setState(() {
+      _wordList = _databaseService.selectWords();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영어단어 외우기1ㅈㅂ  ㄷㄱㅅ됴ㅛ셔ㅑ5'),
+        title: const Text('단어장 목록'),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          _nameController.clear();
+          _meaningController.clear();
+          _chapterController.clear();
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -42,39 +51,38 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Container(
         padding: const EdgeInsets.all(10),
-        child: FutureBuilder(
+        child: FutureBuilder<List<Word>>(
           future: _wordList,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              currentCount = snapshot.data!.length;
-              if (currentCount == 0) {
-                return const Center(child: Text("현재 영어단어 저장된 것이 없습니다."));
+              if (snapshot.data!.isEmpty) {
+                return const Center(child: Text("어떠한 영어단어 정보가 없습니다."));
               } else {
                 return ListView.builder(
                   itemCount: snapshot.data!.length,
                   itemBuilder: (context, index) {
+                    Word word = snapshot.data![index];
                     return wordBox(
-                      snapshot.data![index].id,
-                      snapshot.data![index].name,
-                      snapshot.data![index].meaning,
+                      word.id!,
+                      word.name,
+                      word.meaning,
+                      word.chapter,
                     );
                   },
                 );
               }
             } else if (snapshot.hasError) {
-              return const Center(child: Text("Error."));
+              return const Center(child: Text("에러가 발생했습니다."));
             } else {
-              return const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2));
+              return const Center(child: CircularProgressIndicator());
             }
           },
         ),
       ),
     );
-  }// 저장된 영어 단어장 출력 화면이다.
+  }
 
-
-  Widget wordBox(int id, String name, String meaning) {
+  Widget wordBox(int id, String name, String meaning, int chapter) {
     return Row(
       children: [
         Container(
@@ -89,6 +97,10 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(15),
           child: Text(meaning),
         ),
+        Container(
+          padding: const EdgeInsets.all(15),
+          child: Text('챕터 $chapter'),
+        ),
         Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -101,7 +113,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
     );
-  }  // 단어 상자 출력 박스
+  }
 
   Widget updateButton(int id) {
     return ElevatedButton(
@@ -114,7 +126,8 @@ class _HomePageState extends State<HomePage> {
         );
       },
       style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(Colors.green)),
+        backgroundColor: MaterialStateProperty.all(Colors.green),
+      ),
       child: const Icon(Icons.edit),
     );
   }
@@ -126,8 +139,9 @@ class _HomePageState extends State<HomePage> {
         barrierDismissible: false,
         builder: (BuildContext context) => deleteWordDialog(id),
       ),
-      style:
-      ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.red)),
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(Colors.red),
+      ),
       child: const Icon(Icons.delete),
     );
   }
@@ -144,43 +158,49 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(hintText: "단어를 입력하세요."),
-          ),
-          const SizedBox(height: 15),
-          TextField(
-            controller: _meaningController,
-            decoration: const InputDecoration(hintText: "뜻을 입력하세요."),
-          ),
-          const SizedBox(height: 15),
-          ElevatedButton(
-            onPressed: () {
-              _databaseService
-                  .insertWord(
-                Word(
-                  id: currentCount + 1,
-                  name: _nameController.text,
-                  meaning: _meaningController.text,
-                ),
-              )
-                  .then((result) {
-                if (result) {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _wordList = _databaseService.selectWords();
-                  });
-                } else {
-                  print("insert error");
-                }
-              });
-            },
-            child: const Text("생성"),
-          ),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(hintText: "단어를 입력하세요."),
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: _meaningController,
+              decoration: const InputDecoration(hintText: "뜻을 입력하세요."),
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: _chapterController,
+              decoration: const InputDecoration(hintText: "챕터를 입력하세요."),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 15),
+            ElevatedButton(
+              onPressed: () {
+                _databaseService
+                    .insertWord(
+                  Word(
+                    name: _nameController.text,
+                    meaning: _meaningController.text,
+                    chapter: int.parse(_chapterController.text),
+                  ),
+                )
+                    .then((result) {
+                  if (result) {
+                    Navigator.of(context).pop();
+                    _loadWordList();
+                  } else {
+                    print("insert error");
+                  }
+                });
+              },
+              child: const Text("생성"),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -197,55 +217,62 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      content: FutureBuilder(
+      content: FutureBuilder<Word>(
         future: word,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             _nameController.text = snapshot.data!.name;
             _meaningController.text = snapshot.data!.meaning;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(hintText: "단어를 입력하세요."),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _meaningController,
-                  decoration: const InputDecoration(hintText: "뜻을 입력하세요."),
-                ),
-                const SizedBox(height: 15),
-                ElevatedButton(
-                  onPressed: () {
-                    _databaseService
-                        .updateWord(
-                      Word(
-                        id: snapshot.data!.id,
-                        name: _nameController.text,
-                        meaning: _meaningController.text,
-                      ),
-                    )
-                        .then((result) {
-                      if (result) {
-                        Navigator.of(context).pop();
-                        setState(() {
-                          _wordList = _databaseService.selectWords();
-                        });
-                      } else {
-                        print("update error");
-                      }
-                    });
-                  },
-                  child: const Text("수정"),
-                ),
-              ],
+            _chapterController.text = snapshot.data!.chapter.toString();
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(hintText: "단어를 입력하세요."),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: _meaningController,
+                    decoration: const InputDecoration(hintText: "뜻을 입력하세요."),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: _chapterController,
+                    decoration: const InputDecoration(hintText: "챕터를 입력하세요."),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 15),
+                  ElevatedButton(
+                    onPressed: () {
+                      _databaseService
+                          .updateWord(
+                        Word(
+                          id: snapshot.data!.id,
+                          name: _nameController.text,
+                          meaning: _meaningController.text,
+                          chapter: int.parse(_chapterController.text),
+                        ),
+                      )
+                          .then((result) {
+                        if (result) {
+                          Navigator.of(context).pop();
+                          _loadWordList();
+                        } else {
+                          print("update error");
+                        }
+                      });
+                    },
+                    child: const Text("수정"),
+                  ),
+                ],
+              ),
             );
           } else if (snapshot.hasError) {
-            return const Center(child: Text("Error occurred!"));
+            return const Center(child: Text("에러가 발생했습니다."));
           } else {
-            return const Center(
-                child: CircularProgressIndicator(strokeWidth: 2));
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),
@@ -263,9 +290,7 @@ class _HomePageState extends State<HomePage> {
               _databaseService.deleteWord(id).then((result) {
                 if (result) {
                   Navigator.of(context).pop();
-                  setState(() {
-                    _wordList = _databaseService.selectWords();
-                  });
+                  _loadWordList();
                 } else {
                   print("delete error");
                 }

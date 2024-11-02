@@ -1,17 +1,24 @@
-// 해당 부분으로 데이터를 생성 하였다.
-
-
+// word.dart
 
 class Word {
-  final int id;           // 단어의 고유 식별자를 저장하는 변수
-  final String name;       // 단어의 이름을 저장하는 변수
-  final String meaning;    // 단어의 의미를 저장하는 변수
+  final int? id; // id를 nullable로 변경
+  final String name;
+  final String meaning;
+  final int chapter;
 
-  // 생성자: id, name, meaning을 받아 Word 객체를 초기화함
-  Word({required this.id, required this.name, required this.meaning});
+  Word({
+    this.id,
+    required this.name,
+    required this.meaning,
+    required this.chapter,
+  });
 
-  // 객체의 id, name, meaning을 Map 형태로 반환하는 함수
-  Map<String, dynamic> toMap() { // to map 은 호출하는 개념이다.
-    return {'id': id, 'name': name, 'meaning': meaning};  // Map으로 반환
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id, // id가 있을 때만 포함
+      'name': name,
+      'meaning': meaning,
+      'chapter': chapter,
+    };
   }
 }
