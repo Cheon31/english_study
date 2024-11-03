@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+    <string>앱에서 음성 인식을 사용하기 위해 필요합니다.</string>
 </dict>
 </plist>
