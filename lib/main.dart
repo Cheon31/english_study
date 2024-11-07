@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'Test_chapter_selection_page.dart';
 import 'list.dart'; // 기존 리스트 페이지
 import 'chapter_list_page.dart'; // 기존 스터디용 챕터 선택 페이지
+import 'word_chapter_page.dart'; // 새로운 단어 챕터 페이지
 
 void main() {
   runApp(const MyApp());
@@ -104,8 +105,27 @@ class MainPage extends StatelessWidget {
                 },
               ),
             ),
-            // 빈 컨테이너를 추가하여 4번째 그리드 셀을 채웁니다.
-            Container(),
+            SizedBox(
+              width: double.infinity,
+              height: 100,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero, // 모서리를 직각으로 설정
+                  ),
+                ),
+                child: const Text('단어'),
+                onPressed: () {
+                  // 단어 챕터 페이지로 이동
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WordChapterPage(),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
