@@ -1,4 +1,6 @@
 // word_chapter_page.dart
+// 메인 메뉴에서 '단어' 누르면 이 페이지로 옴.
+// 각 chapter 누르면 안에 있는 단어가 좌르륵 열림
 
 import 'package:flutter/material.dart';
 
