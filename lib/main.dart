@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'Test_chapter_selection_page.dart';
 import 'list.dart'; // 기존 리스트 페이지
 import 'chapter_list_page.dart'; // 기존 스터디용 챕터 선택 페이지
+import 'word_chapter_selection_page.dart'; // 새로 생성할 단어용 챕터 선택 페이지
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +42,7 @@ class MainPage extends StatelessWidget {
           crossAxisSpacing: 20, // 열 사이의 간격
           padding: const EdgeInsets.all(20), // 그리드의 패딩
           children: [
+            // 기존 스터디 버튼
             SizedBox(
               width: double.infinity,
               height: 100,
@@ -62,6 +64,7 @@ class MainPage extends StatelessWidget {
                 },
               ),
             ),
+            // 기존 리스트 버튼
             SizedBox(
               width: double.infinity,
               height: 100,
@@ -83,6 +86,7 @@ class MainPage extends StatelessWidget {
                 },
               ),
             ),
+            // 기존 테스트 버튼
             SizedBox(
               width: double.infinity,
               height: 100,
@@ -104,8 +108,28 @@ class MainPage extends StatelessWidget {
                 },
               ),
             ),
-            // 빈 컨테이너를 추가하여 4번째 그리드 셀을 채웁니다.
-            Container(),
+            // 새로 추가할 단어 버튼
+            SizedBox(
+              width: double.infinity,
+              height: 100,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero, // 모서리를 직각으로 설정
+                  ),
+                ),
+                child: const Text('단어'),
+                onPressed: () {
+                  // 단어용 챕터 선택 페이지로 이동
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WordChapterSelectionPage(),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
