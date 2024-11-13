@@ -58,13 +58,6 @@ class _RememberPageState extends State<RememberPage> {
   void _showSecondWordWithDelay() {
     // 기존 타이머가 있으면 취소
     _meaningTimer?.cancel();
-
-    // 새로운 타이머 시작 (1초 후에 두 번째 단어 표시)
-    _meaningTimer = Timer(const Duration(seconds: 1), () {
-      setState(() {
-        _showSecondWord = true;
-      });
-    });
   }
 
   void _updateCurrentIndex(int newIndex, List<Word> words) {
@@ -103,6 +96,17 @@ class _RememberPageState extends State<RememberPage> {
         }
       });
     }
+  }
+
+  void whenWordButton(){
+    setState(() {
+      if(_showSecondWord){
+        _showSecondWord = false;
+      }else{
+        _showSecondWord = true;
+      }
+
+    });
   }
 
   @override
@@ -147,10 +151,15 @@ class _RememberPageState extends State<RememberPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // 첫 번째 단어 표시
-                    Text(
+                    TextButton(onPressed: (){
+                      whenWordButton();
+                    },
+                      child: Text(
                       _showEnglishFirst ? currentWord.name : currentWord.meaning,
                       style: const TextStyle(fontSize: 32),
                     ),
+                    ),
+
                     const SizedBox(height: 10),
                     // 두 번째 단어를 조건부로 표시
                     if (_showSecondWord)
