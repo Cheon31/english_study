@@ -220,7 +220,7 @@ class MainPage extends StatelessWidget {
                                           );
                                         },
                                         child: const Text(
-                                          "토익단어 100 항목 보기",
+                                          "사용자가 저장한 단어 출력 ",
                                           style: TextStyle(color: Colors.teal),
                                         ),
                                       ),
@@ -235,7 +235,7 @@ class MainPage extends StatelessWidget {
                                           );
                                         },
                                         child: const Text(
-                                          "사용자 지정 단어 출력",
+                                          "토익 단어들 추가 ",
                                           style: TextStyle(color: Colors.teal),
                                         ),
                                       ),
