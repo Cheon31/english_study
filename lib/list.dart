@@ -14,7 +14,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _meaningController = TextEditingController();
-  final TextEditingController _chapterController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService();
   late Future<List<Word>> _wordList;
 
@@ -24,9 +23,10 @@ class _HomePageState extends State<HomePage> {
     _loadWordList();
   }
 
+  // 챕터 99인 단어만 조회하도록 수정
   void _loadWordList() {
     setState(() {
-      _wordList = _databaseService.selectWords();
+      _wordList = _databaseService.selectWords(chapter: 99);
     });
   }
 
@@ -40,7 +40,6 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           _nameController.clear();
           _meaningController.clear();
-          _chapterController.clear();
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -66,7 +65,7 @@ class _HomePageState extends State<HomePage> {
                       word.id!,
                       word.name,
                       word.meaning,
-                      word.chapter,
+                      word.isPreloaded,
                     );
                   },
                 );
@@ -82,36 +81,53 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget wordBox(int id, String name, String meaning, int chapter) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(15),
-          child: Text("$id"),
+  // 챕터 정보가 필요 없으므로 제거하고, isPreloaded만 받도록 수정
+  Widget wordBox(int id, String name, String meaning, bool isPreloaded) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          children: [
+            // isPreloaded에 따라 아이콘 변경
+            Icon(
+              isPreloaded ? Icons.star : Icons.book,
+              color: isPreloaded ? Colors.orange : Colors.teal,
+            ),
+            const SizedBox(width: 10),
+            // 단어 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    meaning,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  // 챕터 정보 표시 제거
+                  // Text(
+                  //   '챕터 $chapter',
+                  //   style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  // ),
+                ],
+              ),
+            ),
+            // 수정 및 삭제 버튼
+            if (!isPreloaded) // 기본 단어는 수정 및 삭제 불가
+              Row(
+                children: [
+                  updateButton(id),
+                  const SizedBox(width: 10),
+                  deleteButton(id),
+                ],
+              ),
+          ],
         ),
-        Container(
-          padding: const EdgeInsets.all(15),
-          child: Text(name),
-        ),
-        Container(
-          padding: const EdgeInsets.all(15),
-          child: Text(meaning),
-        ),
-        Container(
-          padding: const EdgeInsets.all(15),
-          child: Text('챕터 $chapter'),
-        ),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              updateButton(id),
-              const SizedBox(width: 10),
-              deleteButton(id),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -151,7 +167,10 @@ class _HomePageState extends State<HomePage> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("단어 추가"),
+          const Text(
+            "단어 추가",
+            style: TextStyle(color: Colors.black), // 글자 색상을 검정으로 설정
+          ),
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
@@ -162,38 +181,59 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 단어 이름 입력
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(hintText: "단어를 입력하세요."),
+              decoration: const InputDecoration(
+                hintText: "단어를 입력하세요.",
+                hintStyle: TextStyle(color: Colors.black), // 힌트 텍스트 색상도 검정으로 설정
+              ),
+              style: const TextStyle(color: Colors.black), // 입력 텍스트 색상 검정으로 설정
             ),
             const SizedBox(height: 15),
+            // 단어 의미 입력
             TextField(
               controller: _meaningController,
-              decoration: const InputDecoration(hintText: "뜻을 입력하세요."),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: _chapterController,
-              decoration: const InputDecoration(hintText: "챕터를 입력하세요."),
-              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: "뜻을 입력하세요.",
+                hintStyle: TextStyle(color: Colors.black), // 힌트 텍스트 색상도 검정으로 설정
+              ),
+              style: const TextStyle(color: Colors.black), // 입력 텍스트 색상 검정으로 설정
             ),
             const SizedBox(height: 15),
             ElevatedButton(
               onPressed: () {
-                _databaseService
-                    .insertWord(
+                String name = _nameController.text.trim();
+                String meaning = _meaningController.text.trim();
+
+                if (name.isEmpty || meaning.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('단어와 뜻을 모두 입력해주세요.')),
+                  );
+                  return;
+                }
+
+                // 챕터를 자동으로 설정 (99)
+                int chapter = 99;
+
+                _databaseService.insertWord(
                   Word(
-                    name: _nameController.text,
-                    meaning: _meaningController.text,
-                    chapter: int.parse(_chapterController.text),
+                    name: name,
+                    meaning: meaning,
+                    chapter: chapter,
+                    isPreloaded: false, // 사용자 추가 단어임을 명시
                   ),
-                )
-                    .then((result) {
+                ).then((result) {
                   if (result) {
                     Navigator.of(context).pop();
                     _loadWordList();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('단어가 추가되었습니다.')),
+                    );
                   } else {
-                    print("insert error");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('단어 추가에 실패했습니다.')),
+                    );
                   }
                 });
               },
@@ -205,12 +245,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget updateWordDialog(Future<Word> word) {
+  Widget updateWordDialog(Future<Word> wordFuture) {
     return AlertDialog(
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("단어 수정"),
+          const Text(
+            "단어 수정",
+            style: TextStyle(color: Colors.black), // 텍스트 색상 설정
+          ),
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
@@ -218,12 +261,17 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       content: FutureBuilder<Word>(
-        future: word,
+        future: wordFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            _nameController.text = snapshot.data!.name;
-            _meaningController.text = snapshot.data!.meaning;
-            _chapterController.text = snapshot.data!.chapter.toString();
+            Word word = snapshot.data!;
+            if (word.isPreloaded) {
+              return const Text("기본 탑제된 단어는 수정할 수 없습니다.");
+            }
+
+            _nameController.text = word.name;
+            _meaningController.text = word.meaning;
+
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -238,29 +286,37 @@ class _HomePageState extends State<HomePage> {
                     decoration: const InputDecoration(hintText: "뜻을 입력하세요."),
                   ),
                   const SizedBox(height: 15),
-                  TextField(
-                    controller: _chapterController,
-                    decoration: const InputDecoration(hintText: "챕터를 입력하세요."),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 15),
                   ElevatedButton(
                     onPressed: () {
-                      _databaseService
-                          .updateWord(
+                      String updatedName = _nameController.text.trim();
+                      String updatedMeaning = _meaningController.text.trim();
+
+                      if (updatedName.isEmpty || updatedMeaning.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('단어와 뜻을 모두 입력해주세요.')),
+                        );
+                        return;
+                      }
+
+                      _databaseService.updateWord(
                         Word(
-                          id: snapshot.data!.id,
-                          name: _nameController.text,
-                          meaning: _meaningController.text,
-                          chapter: int.parse(_chapterController.text),
+                          id: word.id,
+                          name: updatedName,
+                          meaning: updatedMeaning,
+                          chapter: word.chapter,
+                          isPreloaded: word.isPreloaded,
                         ),
-                      )
-                          .then((result) {
+                      ).then((result) {
                         if (result) {
                           Navigator.of(context).pop();
                           _loadWordList();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('단어가 수정되었습니다.')),
+                          );
                         } else {
-                          print("update error");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('단어 수정에 실패했습니다.')),
+                          );
                         }
                       });
                     },
@@ -291,8 +347,14 @@ class _HomePageState extends State<HomePage> {
                 if (result) {
                   Navigator.of(context).pop();
                   _loadWordList();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('단어가 삭제되었습니다.')),
+                  );
                 } else {
                   print("delete error");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('단어 삭제에 실패했습니다.')),
+                  );
                 }
               });
             },

@@ -22,20 +22,53 @@ class DatabaseService {
   Future<Database> _initDatabase() async {
     return await openDatabase(
       join(await getDatabasesPath(), 'word_database.db'),
-      onCreate: (db, version) {
-        return db.execute(
+      onCreate: (db, version) async {
+        await db.execute(
           '''
           CREATE TABLE words(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             meaning TEXT,
-            chapter INTEGER
+            chapter INTEGER,
+            isPreloaded INTEGER DEFAULT 0
           )
           ''',
         );
+
+        // 기본 단어 삽입
+        await _insertPreloadedWords(db);
       },
-      version: 1, // 데이터베이스 버전 설정
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // isPreloaded 컬럼 추가
+          await db.execute('ALTER TABLE words ADD COLUMN isPreloaded INTEGER DEFAULT 0');
+
+          // 기존 단어들을 기본 단어로 마킹 (필요 시)
+          // 예시로, 모든 기존 단어를 기본 단어로 설정
+          // 실제로는 필요한 단어만 업데이트해야 함
+          // await db.update('words', {'isPreloaded': 1});
+        }
+        // 추가적인 버전 업그레이드 로직을 여기에 작성
+      },
+      version: 2, // 데이터베이스 버전을 2로 올림
     );
+  }
+
+  // 기본 단어를 삽입하는 메서드
+  Future<void> _insertPreloadedWords(Database db) async {
+    List<Word> preloadedWords = [
+      Word(name: 'apple', meaning: 'A fruit that grows on trees.', chapter: 1, isPreloaded: true),
+      Word(name: 'book', meaning: 'A written or printed work consisting of pages glued or sewn together.', chapter: 1, isPreloaded: true),
+      // 필요한 기본 단어들을 추가하세요
+    ];
+
+    for (var word in preloadedWords) {
+      await db.insert(
+        'words',
+        word.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
   }
 
   Future<bool> insertWord(Word word) async {
@@ -67,12 +100,7 @@ class DatabaseService {
     }
 
     return List.generate(data.length, (i) {
-      return Word(
-        id: data[i]['id'],
-        name: data[i]['name'],
-        meaning: data[i]['meaning'],
-        chapter: data[i]['chapter'],
-      );
+      return Word.fromMap(data[i]);
     });
   }
 
@@ -80,12 +108,7 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> data =
     await db.query('words', where: "id = ?", whereArgs: [id]);
-    return Word(
-      id: data[0]['id'],
-      name: data[0]['name'],
-      meaning: data[0]['meaning'],
-      chapter: data[0]['chapter'],
-    );
+    return Word.fromMap(data[0]);
   }
 
   Future<bool> updateWord(Word word) async {
@@ -130,12 +153,7 @@ class DatabaseService {
     );
 
     return List.generate(data.length, (i) {
-      return Word(
-        id: data[i]['id'],
-        name: data[i]['name'],
-        meaning: data[i]['meaning'],
-        chapter: data[i]['chapter'],
-      );
+      return Word.fromMap(data[i]);
     });
   }
 }

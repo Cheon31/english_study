@@ -6,6 +6,7 @@ import 'list.dart'; // 기존 리스트 페이지
 import 'chapter_list_page.dart'; // 기존 스터디용 챕터 선택 페이지
 import 'word_chapter_selection_page.dart'; // 새로 생성할 단어용 챕터 선택 페이지
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 사용
+import 'word_chapter_list_page.dart'; // 새로 생성한 페이지 import
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
     return base.copyWith(
       primaryColor: Colors.teal,
       colorScheme: base.colorScheme.copyWith(
-        secondary: Colors.orangeAccent, // accentColor 대체
+        secondary: Colors.orangeAccent,
       ),
       scaffoldBackgroundColor: Colors.white,
       appBarTheme: const AppBarTheme(
@@ -30,10 +31,10 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.teal, // primary → backgroundColor
-          foregroundColor: Colors.white, // onPrimary → foregroundColor
+          backgroundColor: Colors.teal,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // 버튼 모서리 둥글게
+            borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           textStyle: const TextStyle(
@@ -43,16 +44,16 @@ class MyApp extends StatelessWidget {
         ),
       ),
       textTheme: GoogleFonts.notoSansTextTheme(base.textTheme).copyWith(
-        headlineSmall: const TextStyle( // headline6 → headlineSmall
+        headlineSmall: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
-        bodyMedium: const TextStyle( // bodyText2 → bodyMedium
+        bodyMedium: const TextStyle(
           fontSize: 16,
           color: Colors.black87,
         ),
-        labelLarge: const TextStyle( // button → labelLarge
+        labelLarge: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
@@ -62,7 +63,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 앱의 첫 화면을 MainPage로 설정하고 커스텀 테마 적용
     return MaterialApp(
       title: '영단어 암기 앱',
       theme: _buildTheme(),
@@ -107,9 +107,9 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      themeMode: ThemeMode.system, // 시스템 테마에 따라 자동 전환
+      themeMode: ThemeMode.system,
       home: const MainPage(title: '영어 단어장'),
-      debugShowCheckedModeBanner: false, // 디버그 배너 제거
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -122,15 +122,14 @@ class MainPage extends StatelessWidget {
   // 버튼 아이콘을 위한 데이터 리스트
   final List<_MainButtonData> buttonData = const [
     _MainButtonData(title: '스터디', icon: Icons.school),
-    _MainButtonData(title: '리스트', icon: Icons.list),
+    _MainButtonData(title: '단어들', icon: Icons.library_books), // "리스트"와 "단어"를 합친 버튼
     _MainButtonData(title: '테스트', icon: Icons.quiz),
-    _MainButtonData(title: '단어', icon: Icons.book),
+    _MainButtonData(title: '단어 목록들', icon: Icons.library_books), // 기존 "단어 목록들" 버튼
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 그라데이션 배경 적용
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -142,7 +141,6 @@ class MainPage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // 커스텀 AppBar
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -150,13 +148,12 @@ class MainPage extends StatelessWidget {
                   children: [
                     Text(
                       '$title 메인 화면',
-                      style: Theme.of(context).textTheme.headlineSmall, // 수정된 텍스트 스타일
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     IconButton(
                       icon: const Icon(Icons.settings),
                       color: Colors.white,
                       onPressed: () {
-                        // 설정 페이지로 이동 (필요 시 구현)
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('설정 페이지는 아직 구현되지 않았습니다.')),
                         );
@@ -171,10 +168,10 @@ class MainPage extends StatelessWidget {
                   child: GridView.builder(
                     itemCount: buttonData.length,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // 2열 그리드
-                      mainAxisSpacing: 20, // 세로 간격
-                      crossAxisSpacing: 20, // 가로 간격
-                      childAspectRatio: 1.0, // 정사각형 비율
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 20,
+                      childAspectRatio: 1.0,
                     ),
                     itemBuilder: (context, index) {
                       final button = buttonData[index];
@@ -189,12 +186,71 @@ class MainPage extends StatelessWidget {
                                 ),
                               );
                               break;
-                            case '리스트':
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const HomePage(),
-                                ),
+                            case '단어들':
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          "단어들 선택",
+                                          style: TextStyle(color: Colors.black), // 글자 색상을 검정으로 설정
+                                        ),
+                                        IconButton(
+                                          onPressed: () => Navigator.of(context).pop(),
+                                          icon: const Icon(Icons.close),
+                                        ),
+                                      ],
+                                    ),
+                                    content: const Text(
+                                      "어떤 기능을 사용하시겠습니까?",
+                                      style: TextStyle(color: Colors.black), // 내용 텍스트 색상을 검정으로 설정
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(); // 다이얼로그 닫기
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const HomePage(), // "리스트" 페이지로 이동
+                                            ),
+                                          );
+                                        },
+                                        child: const Text(
+                                          "토익단어 100 항목 보기",
+                                          style: TextStyle(color: Colors.teal),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(); // 다이얼로그 닫기
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const WordChapterSelectionPage(), // "단어" 페이지로 이동
+                                            ),
+                                          );
+                                        },
+                                        child: const Text(
+                                          "사용자 지정 단어 출력",
+                                          style: TextStyle(color: Colors.teal),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(); // 다이얼로그 닫기
+                                        },
+                                        child: const Text(
+                                          "취소",
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
                               break;
                             case '테스트':
@@ -205,11 +261,11 @@ class MainPage extends StatelessWidget {
                                 ),
                               );
                               break;
-                            case '단어':
+                            case '단어 목록들': // 기존 "단어 목록들" 버튼의 동작 정의
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const WordChapterSelectionPage(),
+                                  builder: (context) => const WordChapterListPage(),
                                 ),
                               );
                               break;
@@ -220,10 +276,10 @@ class MainPage extends StatelessWidget {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.8), // backgroundColor
-                          foregroundColor: Colors.teal, // foregroundColor
+                          backgroundColor: Colors.white.withOpacity(0.8),
+                          foregroundColor: Colors.teal,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16), // 버튼 모서리 둥글게
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 5,
                         ),
@@ -250,7 +306,6 @@ class MainPage extends StatelessWidget {
                   ),
                 ),
               ),
-              // 하단 텍스트 또는 기타 위젯 추가 가능
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
@@ -269,7 +324,6 @@ class MainPage extends StatelessWidget {
   }
 }
 
-// 버튼 데이터를 위한 클래스
 class _MainButtonData {
   final String title;
   final IconData icon;
