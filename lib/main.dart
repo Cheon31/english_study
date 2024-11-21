@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'Test_chapter_selection_page.dart';
-import 'list.dart'; // 기존 리스트 페이지
+import 'mylist.dart'; // 기존 리스트 페이지
 import 'chapter_list_page.dart'; // 기존 스터디용 챕터 선택 페이지
 import 'word_chapter_selection_page.dart'; // 새로 생성할 단어용 챕터 선택 페이지
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 사용
@@ -220,7 +220,7 @@ class MainPage extends StatelessWidget {
                                           );
                                         },
                                         child: const Text(
-                                          "토익단어 100 항목 보기",
+                                          "사용자가 저장한 단어 출력 ",
                                           style: TextStyle(color: Colors.teal),
                                         ),
                                       ),
@@ -235,7 +235,7 @@ class MainPage extends StatelessWidget {
                                           );
                                         },
                                         child: const Text(
-                                          "사용자 지정 단어 출력",
+                                          "토익 단어들 추가 ",
                                           style: TextStyle(color: Colors.teal),
                                         ),
                                       ),
