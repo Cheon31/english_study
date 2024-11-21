@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'Test_chapter_selection_page.dart';
-import 'list.dart'; // 기존 리스트 페이지
+import 'mylist.dart'; // 기존 리스트 페이지
 import 'chapter_list_page.dart'; // 기존 스터디용 챕터 선택 페이지
 import 'word_chapter_selection_page.dart'; // 새로 생성할 단어용 챕터 선택 페이지
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 사용
