@@ -6,6 +6,8 @@ class Word {
   final String meaning;
   final int chapter;
   final bool isPreloaded; // 새 필드 추가
+  int memorizedStatus; // 0: 기본값, 1: 외움, 2: 못 외움
+  int remember; // 0 이상: 맞춘 횟수
 
   Word({
     this.id,
@@ -13,6 +15,8 @@ class Word {
     required this.meaning,
     required this.chapter,
     this.isPreloaded = false, // 기본값 설정
+    this.memorizedStatus = 0, // 기본값 설정
+    this.remember = 0, // 기본값 설정
   });
 
   // 데이터베이스에 저장할 맵으로 변환
@@ -23,6 +27,8 @@ class Word {
       'meaning': meaning,
       'chapter': chapter,
       'isPreloaded': isPreloaded ? 1 : 0, // Boolean을 Integer로 변환
+      'memorizedStatus': memorizedStatus, // 추가된 부분
+      'remember': remember, // 추가된 부분
     };
   }
 
@@ -34,6 +40,8 @@ class Word {
       meaning: map['meaning'],
       chapter: map['chapter'],
       isPreloaded: map['isPreloaded'] == 1, // Integer를 Boolean으로 변환
+      memorizedStatus: map['memorizedStatus'] ?? 0, // 추가된 부분
+      remember: map['remember'] ?? 0, // 추가된 부분
     );
   }
 }

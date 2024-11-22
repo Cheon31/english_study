@@ -17,13 +17,14 @@ class RememberPage extends StatefulWidget {
 
 class _RememberPageState extends State<RememberPage> {
   final DatabaseService _databaseService = DatabaseService();
-  late Future<List<Word>> _wordList;
+  List<Word> _words = [];
+  List<Word> _testWords = [];
   int _currentIndex = 0;
   final FlutterTts flutterTts = FlutterTts();
 
   bool _showSecondWord = false; // 의미 또는 영어 단어 표시 여부를 제어
-  Timer? _meaningTimer; // 의미 표시 지연을 위한 타이머
   bool _showEnglishFirst = true; // 단어 표시 순서를 제어하는 변수
+  int _round = 1; // 순환 횟수
 
   @override
   void initState() {
@@ -34,14 +35,23 @@ class _RememberPageState extends State<RememberPage> {
 
   @override
   void dispose() {
-    _meaningTimer?.cancel(); // 활성화된 타이머가 있으면 취소
     flutterTts.stop(); // 진행 중인 TTS가 있으면 중지
     super.dispose();
   }
 
-  void _loadWords() {
+  void _loadWords() async {
+    List<Word> words = await _databaseService.selectWordsByChapters(widget.chapters);
     setState(() {
-      _wordList = _databaseService.selectWordsByChapters(widget.chapters);
+      _words = words;
+      _filterWords();
+    });
+  }
+
+  void _filterWords() {
+    // memorizedStatus가 2(못 외움) 또는 0(선택되지 않음)인 단어들만 남깁니다.
+    setState(() {
+      _testWords = _words.where((word) => word.memorizedStatus != 1).toList();
+      _currentIndex = 0;
     });
   }
 
@@ -55,30 +65,43 @@ class _RememberPageState extends State<RememberPage> {
     await flutterTts.speak(text);
   }
 
-  void _showSecondWordWithDelay() {
-    // 기존 타이머가 있으면 취소
-    _meaningTimer?.cancel();
-  }
-
-  void _updateCurrentIndex(int newIndex, List<Word> words) {
+  void _updateCurrentIndex(int newIndex) {
     setState(() {
       _currentIndex = newIndex;
       _showSecondWord = false; // 두 번째 단어를 처음에는 숨김
     });
-    _showSecondWordWithDelay(); // 두 번째 단어 표시 타이머 시작
-    _speak(_showEnglishFirst ? words[_currentIndex].name : words[_currentIndex].meaning);
+    _speak(_showEnglishFirst ? _testWords[_currentIndex].name : _testWords[_currentIndex].meaning);
   }
 
-  void _nextWord(List<Word> words) {
-    if (words.isEmpty) return;
-    int newIndex = (_currentIndex < words.length - 1) ? _currentIndex + 1 : 0;
-    _updateCurrentIndex(newIndex, words);
+  void _nextWord() {
+    if (_testWords.isEmpty) return;
+
+    if (_currentIndex < _testWords.length - 1) {
+      _updateCurrentIndex(_currentIndex + 1);
+    } else {
+      // 한 바퀴 순환 완료
+      _round++;
+      _filterWords();
+
+      // 순환 후에도 남은 단어가 없다면 종료
+      if (_testWords.isEmpty) {
+        setState(() {
+          _currentIndex = 0;
+        });
+      } else {
+        _updateCurrentIndex(0);
+      }
+    }
   }
 
-  void _prevWord(List<Word> words) {
-    if (words.isEmpty) return;
-    int newIndex = (_currentIndex > 0) ? _currentIndex - 1 : words.length - 1;
-    _updateCurrentIndex(newIndex, words);
+  void _prevWord() {
+    if (_testWords.isEmpty) return;
+
+    if (_currentIndex > 0) {
+      _updateCurrentIndex(_currentIndex - 1);
+    } else {
+      _updateCurrentIndex(_testWords.length - 1);
+    }
   }
 
   void _toggleWordOrder() {
@@ -86,27 +109,22 @@ class _RememberPageState extends State<RememberPage> {
       _showEnglishFirst = !_showEnglishFirst; // 단어 순서 토글
       _showSecondWord = false; // 두 번째 단어를 숨김
     });
-    // 현재 단어의 순서를 변경하므로 타이머를 재설정
-    if (_wordList is Future<List<Word>>) {
-      _wordList.then((words) {
-        if (words.isNotEmpty) {
-          _meaningTimer?.cancel();
-          _showSecondWordWithDelay();
-          _speak(_showEnglishFirst ? words[_currentIndex].name : words[_currentIndex].meaning);
-        }
-      });
+    if (_testWords.isNotEmpty) {
+      _speak(_showEnglishFirst ? _testWords[_currentIndex].name : _testWords[_currentIndex].meaning);
     }
   }
 
-  void whenWordButton(){
+  void _toggleSecondWord() {
     setState(() {
-      if(_showSecondWord){
-        _showSecondWord = false;
-      }else{
-        _showSecondWord = true;
-      }
-
+      _showSecondWord = !_showSecondWord;
     });
+  }
+
+  void _updateWordStatus(Word word, int status) {
+    setState(() {
+      word.memorizedStatus = status;
+    });
+    _nextWord();
   }
 
   @override
@@ -114,7 +132,7 @@ class _RememberPageState extends State<RememberPage> {
     String chaptersText = widget.chapters.join(', ');
     return Scaffold(
       appBar: AppBar(
-        title: Text('챕터 $chaptersText 단어 암기'),
+        title: Text('챕터 $chaptersText 단어 암기 - $_round 회차'),
         actions: [
           IconButton(
             icon: Icon(_showEnglishFirst ? Icons.swap_horiz : Icons.swap_horiz_outlined),
@@ -124,73 +142,82 @@ class _RememberPageState extends State<RememberPage> {
         ],
       ),
       body: Center(
-        child: FutureBuilder<List<Word>>(
-          future: _wordList,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<Word> words = snapshot.data!;
-              if (words.isEmpty) {
-                return const Text('선택한 챕터에 단어가 없습니다.');
-              } else {
-                // _currentIndex가 단어 목록 범위를 벗어나지 않도록 확인
-                if (_currentIndex >= words.length) {
-                  _currentIndex = 0;
-                }
-                Word currentWord = words[_currentIndex];
-
-                // 새로운 단어가 로드될 때 의미 표시 타이머 시작
-                // 이는 위젯이 처음 빌드될 때도 동작
-                if (!_showSecondWord) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _showSecondWordWithDelay();
-                    _speak(_showEnglishFirst ? currentWord.name : currentWord.meaning);
-                  });
-                }
-
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 첫 번째 단어 표시
-                    TextButton(onPressed: (){
-                      whenWordButton();
-                    },
-                      child: Text(
-                      _showEnglishFirst ? currentWord.name : currentWord.meaning,
-                      style: const TextStyle(fontSize: 32),
-                    ),
-                    ),
-
-                    const SizedBox(height: 10),
-                    // 두 번째 단어를 조건부로 표시
-                    if (_showSecondWord)
-                      Text(
-                        _showEnglishFirst ? currentWord.meaning : currentWord.name,
-                        style: const TextStyle(fontSize: 24, color: Colors.grey),
-                      ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: words.length > 1 ? () => _prevWord(words) : null,
-                          child: const Text('이전'),
-                        ),
-                        const SizedBox(width: 20),
-                        ElevatedButton(
-                          onPressed: words.length > 1 ? () => _nextWord(words) : null,
-                          child: const Text('다음'),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              }
-            } else if (snapshot.hasError) {
-              return const Text('에러가 발생했습니다.');
-            } else {
-              return const CircularProgressIndicator();
-            }
-          },
+        child: _testWords.isEmpty
+            ? Text(
+          '모든 단어를 외웠습니다!',
+          style: const TextStyle(fontSize: 24),
+        )
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 첫 번째 단어 표시
+            TextButton(
+              onPressed: _toggleSecondWord,
+              child: Text(
+                _showEnglishFirst ? _testWords[_currentIndex].name : _testWords[_currentIndex].meaning,
+                style: const TextStyle(fontSize: 32),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // 두 번째 단어를 조건부로 표시
+            if (_showSecondWord)
+              Text(
+                _showEnglishFirst ? _testWords[_currentIndex].meaning : _testWords[_currentIndex].name,
+                style: const TextStyle(fontSize: 24, color: Colors.grey),
+              ),
+            const SizedBox(height: 20),
+            // "외움", "못 외움" 버튼 추가
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _updateWordStatus(_testWords[_currentIndex], 1); // 외움
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    minimumSize: const Size(100, 50),
+                  ),
+                  child: const Text('외움'),
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    _updateWordStatus(_testWords[_currentIndex], 2); // 못 외움
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    minimumSize: const Size(100, 50),
+                  ),
+                  child: const Text('못 외움'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // 이전, 다음 버튼
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _testWords.length > 1 ? _prevWord : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    minimumSize: const Size(100, 50),
+                  ),
+                  child: const Text('이전'),
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: _testWords.length > 1 ? _nextWord : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    minimumSize: const Size(100, 50),
+                  ),
+                  child: const Text('다음'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
