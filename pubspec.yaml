@@ -58,8 +58,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_tts: ^3.5.2  # 뛰어 쓰기 엄청 잘 해야 한다.
-  fluttertoast: ^8.2.8
   google_fonts:
+  fluttertoast: ^8.2.1
 
   cupertino_icons: ^1.0.8
   sqflite: ^2.0.0+4

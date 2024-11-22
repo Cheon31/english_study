@@ -235,7 +235,7 @@ class MainPage extends StatelessWidget {
                                           );
                                         },
                                         child: const Text(
-                                          "토익 단어들 추가 ",
+                                          "토익 단어 목록 보기  ",
                                           style: TextStyle(color: Colors.teal),
                                         ),
                                       ),

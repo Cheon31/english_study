@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'databaseConfig.dart';
 import 'word.dart';
 import 'test_result_page.dart'; // 테스트 결과 페이지 (다음 단계에서 생성)
-import 'dart:math';
+
 
 class TestPage extends StatefulWidget {
   final List<int> chapters;
@@ -34,12 +34,13 @@ class _TestPageState extends State<TestPage> {
       _words = words;
       _testWords = List.from(_words);
       _testWords.shuffle(); // 단어들을 섞습니다.
+      _currentIndex = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_testWords == null || _testWords.isEmpty) {
+    if (_testWords.isEmpty) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('단어 테스트'),
@@ -92,9 +93,14 @@ class _TestPageState extends State<TestPage> {
                 childAspectRatio: 3,
                 children: options.map((option) {
                   return ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       bool isCorrect = option == currentWord.meaning;
                       _results[currentWord] = isCorrect;
+                      if (isCorrect) {
+                        // 정답일 경우 remember 카운터 증가
+                        currentWord.remember += 1;
+                        await _databaseService.updateWord(currentWord);
+                      }
                       setState(() {
                         _currentIndex++;
                       });
