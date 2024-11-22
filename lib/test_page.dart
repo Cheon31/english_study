@@ -17,15 +17,17 @@ class TestPage extends StatefulWidget {
 
 class _TestPageState extends State<TestPage> {
   final DatabaseService _databaseService = DatabaseService();
-  late List<Word> _words;
-  late List<Word> _testWords; // 테스트할 단어 리스트
+  late List<Word> _words =[];
+  late List<Word> _testWords =[]; // 테스트할 단어 리스트
   int _currentIndex = 0;
   Map<Word, bool> _results = {}; // 단어별 정답 여부 저장
+  bool isloading =true;
 
   @override
   void initState() {
     super.initState();
     _loadWords();
+    isloading =false;
   }
 
   void _loadWords() async {
@@ -78,7 +80,9 @@ class _TestPageState extends State<TestPage> {
       appBar: AppBar(
         title: const Text('단어 테스트'),
       ),
-      body: Padding(
+      body: isloading             //데이터가 다 안받아졌으면 로딩동그라미가 돈다
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
