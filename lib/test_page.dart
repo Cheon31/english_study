@@ -93,33 +93,37 @@ class _TestPageState extends State<TestPage> {
     List<String> options = _generateOptions(currentWord);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center, // 중앙 정렬
       children: [
         Text(
           currentWord.name,
           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
-        Expanded(
-          child: GridView.count(
-            crossAxisCount: 2, // 2열로 설정하여 2x2 그리드 형성
-            crossAxisSpacing: 20.0, // 가로 간격 설정
-            mainAxisSpacing: 20.0, // 세로 간격 설정
-            childAspectRatio: 3, // 버튼의 가로세로 비율
-            children: options.map((option) {
-              return ElevatedButton(
-                onPressed: () => _handleOptionSelected(option),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
-                  backgroundColor: Colors.blue, // 버튼의 기본 색상
-                ),
-                child: Text(
-                  option,
-                  style: const TextStyle(fontSize: 18),
-                ),
-              );
-            }).toList(),
-          ),
+        // 옵션과 상단 사이에 여백 추가
+        // Spacer(flex: 2),
+        GridView.count(
+          shrinkWrap: true, // GridView가 필요한 만큼만 공간을 차지
+          crossAxisCount: 2, // 2열로 설정하여 2x2 그리드 형성
+          crossAxisSpacing: 20.0, // 가로 간격 설정
+          mainAxisSpacing: 20.0, // 세로 간격 설정
+          childAspectRatio: 3, // 버튼의 가로세로 비율
+          children: options.map((option) {
+            return ElevatedButton(
+              onPressed: () => _handleOptionSelected(option),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+                backgroundColor: Colors.blue, // 버튼의 기본 색상
+              ),
+              child: Text(
+                option,
+                style: const TextStyle(fontSize: 18),
+              ),
+            );
+          }).toList(),
         ),
+        // 옵션과 하단 사이에 여백 추가
+        // Spacer(flex: 3),
       ],
     );
   }
@@ -143,7 +147,7 @@ class _TestPageState extends State<TestPage> {
       showFeedback = true;
     });
 
-    // 피드백 표시 후 1초 후에 다음 단어로 이동
+    // 피드백 표시 후 0.5초 후에 다음 단어로 이동
     await Future.delayed(const Duration(milliseconds: 500));
     setState(() {
       showFeedback = false;
