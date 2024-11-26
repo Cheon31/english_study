@@ -187,70 +187,12 @@ class MainPage extends StatelessWidget {
                               );
                               break;
                             case '단어들':
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          "단어들 선택",
-                                          style: TextStyle(color: Colors.black), // 글자 색상을 검정으로 설정
-                                        ),
-                                        IconButton(
-                                          onPressed: () => Navigator.of(context).pop(),
-                                          icon: const Icon(Icons.close),
-                                        ),
-                                      ],
-                                    ),
-                                    content: const Text(
-                                      "어떤 기능을 사용하시겠습니까?",
-                                      style: TextStyle(color: Colors.black), // 내용 텍스트 색상을 검정으로 설정
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(); // 다이얼로그 닫기
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => const HomePage(), // "리스트" 페이지로 이동
-                                            ),
-                                          );
-                                        },
-                                        child: const Text(
-                                          "사용자가 저장한 단어 출력 ",
-                                          style: TextStyle(color: Colors.teal),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(); // 다이얼로그 닫기
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => const WordChapterSelectionPage(), // "단어" 페이지로 이동
-                                            ),
-                                          );
-                                        },
-                                        child: const Text(
-                                          "토익 단어 목록 보기  ",
-                                          style: TextStyle(color: Colors.teal),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(); // 다이얼로그 닫기
-                                        },
-                                        child: const Text(
-                                          "취소",
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
+                            // 변경된 부분: 다이얼로그 대신 바로 HomePage로 이동
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HomePage(), // "사용자가 저장한 단어 출력" 페이지로 직접 이동
+                                ),
                               );
                               break;
                             case '테스트':
