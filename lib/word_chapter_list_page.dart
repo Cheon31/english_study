@@ -188,6 +188,38 @@ class _WordChapterListPageState extends State<WordChapterListPage> {
                                                   ),
                                                 ),
                                               ),
+                                              TextButton(onPressed: () {
+                                                String name = word.name;
+                                                String meaning = word.meaning;
+                                                int chapter =99;
+                                                _databaseService.insertWord(
+                                                  Word(
+                                                    name: name,
+                                                    meaning: meaning,
+                                                    chapter: chapter,
+                                                    isPreloaded: false, // 사용자 추가 단어임을 명시
+                                                  ),
+                                                ).then((result) {
+                                                  if (result) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('단어가 추가되었습니다.')),
+                                                    );
+                                                  } else {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('단어 추가에 실패했습니다.')),
+                                                    );
+                                                  }
+                                                });
+                                              },
+                                                  child: Text(
+                                                    '마이리스트 추가',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color:
+                                                      Colors.grey.shade600,
+                                                    ),
+                                                  ),
+                                              )
                                             ],
                                           ),
                                         );
