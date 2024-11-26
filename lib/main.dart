@@ -122,9 +122,9 @@ class MainPage extends StatelessWidget {
   // 버튼 아이콘을 위한 데이터 리스트
   final List<_MainButtonData> buttonData = const [
     _MainButtonData(title: '스터디', icon: Icons.school),
-    _MainButtonData(title: '단어들', icon: Icons.library_books), // "리스트"와 "단어"를 합친 버튼
+    _MainButtonData(title: '마이리스트', icon: Icons.library_books), // "리스트"와 "단어"를 합친 버튼
     _MainButtonData(title: '테스트', icon: Icons.quiz),
-    _MainButtonData(title: '단어 목록들', icon: Icons.library_books), // 기존 "단어 목록들" 버튼
+    _MainButtonData(title: '단어 목록', icon: Icons.library_books), // 기존 "단어 목록들" 버튼
   ];
 
   @override
@@ -186,7 +186,7 @@ class MainPage extends StatelessWidget {
                                 ),
                               );
                               break;
-                            case '단어들':
+                            case '마이리스트':
                             // 변경된 부분: 다이얼로그 대신 바로 HomePage로 이동
                               Navigator.push(
                                 context,
@@ -203,7 +203,7 @@ class MainPage extends StatelessWidget {
                                 ),
                               );
                               break;
-                            case '단어 목록들': // 기존 "단어 목록들" 버튼의 동작 정의
+                            case '단어 목록': // 기존 "단어 목록들" 버튼의 동작 정의
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
