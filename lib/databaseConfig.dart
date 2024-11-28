@@ -1,5 +1,3 @@
-// databaseConfig.dart
-
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'word.dart';
@@ -32,7 +30,8 @@ class DatabaseService {
             chapter INTEGER,
             isPreloaded INTEGER DEFAULT 0,
             memorizedStatus INTEGER DEFAULT 0,
-            remember INTEGER DEFAULT 0
+            remember INTEGER DEFAULT 0,
+            UNIQUE(name, chapter) -- 고유 제약 조건 추가
           )
           ''',
         );
@@ -493,6 +492,8 @@ class DatabaseService {
       Word(name: 'condensed', meaning: '요약한', chapter: 10, isPreloaded: true),
       Word(name: 'endorse', meaning: '지지하다', chapter: 10, isPreloaded: true),
       Word(name: 'punctually', meaning: '제시간에', chapter: 10, isPreloaded: true),
+
+      // 필요한 다른 단어들도 추가
     ];
 
     for (var word in preloadedWords) {
@@ -507,11 +508,15 @@ class DatabaseService {
   Future<bool> insertWord(Word word) async {
     final db = await database;
     try {
-      await db.insert(
+      int id = await db.insert(
         'words',
         word.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        conflictAlgorithm: ConflictAlgorithm.ignore, // 중복 시 무시
       );
+      if (id == 0) {
+        // 삽입이 무시된 경우 (이미 존재)
+        return false;
+      }
       return true;
     } catch (err) {
       print(err.toString());
