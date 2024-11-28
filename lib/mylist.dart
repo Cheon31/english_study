@@ -337,7 +337,12 @@ class _HomePageState extends State<HomePage> {
 
   Widget deleteWordDialog(int id) {
     return AlertDialog(
-      title: const Text("이 단어를 삭제하시겠습니까?"),
+      title: const Text(
+          "이 단어를 삭제하시겠습니까?",
+        style: TextStyle(
+          color: Colors.red
+        ),
+          ),
       content: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
