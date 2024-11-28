@@ -112,7 +112,7 @@ class _TestPageState extends State<TestPage> {
             return ElevatedButton(
               onPressed: () => _handleOptionSelected(option),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+                padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
                 backgroundColor: Colors.blue, // 버튼의 기본 색상
               ),
               child: Text(
